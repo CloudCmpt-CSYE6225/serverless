@@ -15,7 +15,7 @@ const rdsConfig = {
 };
 
 // Initialize SNS client (v3)
-const snsClient = new SNSClient({ region: process.env.AWS_REGION });
+const snsClient = new SNSClient({ region: process.env.REGION });
 
 // Lambda handler function
 export const handler = async (event) => {
