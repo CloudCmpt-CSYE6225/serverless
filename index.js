@@ -23,16 +23,16 @@ export const handler = async (event) => {
         // Parse SNS message to extract user details
         const snsMessage = event.Records[0].Sns.Message;
         const userDetails = JSON.parse(snsMessage);
-        const { email, first_name: firstName, id } = userDetails;
+        const {  email, first_name: firstName, id, token } = userDetails;
 
         // Generate verification link (expires in 2 minutes)
-        const verificationLink = generateVerificationLink(email);
+        const verificationLink = generateVerificationLink(email, token);
 
         // Send verification email via SendGrid
         await sendVerificationEmail(email, firstName, verificationLink);
 
         // Track email in RDS database
-        await trackEmailInRDS(email, verificationLink);
+        await trackEmailInRDS(email, verificationLink, id, token);
 
         return { statusCode: 200, body: 'Email sent successfully' };
     } catch (error) {
@@ -42,9 +42,9 @@ export const handler = async (event) => {
 };
 
 // Generate a unique verification link that expires after 2 minutes
-function generateVerificationLink(email) {
+function generateVerificationLink(email, token) {
     const expirationTime = new Date(Date.now() + 2 * 60 * 1000).toISOString();
-    return `http://${process.env.environment}.srijithmakam.me/v1/user/verify?email=${email}&expires=${expirationTime}`;
+    return `http://${process.env.environment}.srijithmakam.me/v1/user/verify?email=${email}&expires=${token}`;
 }
 
 // Send verification email using SendGrid
@@ -68,9 +68,9 @@ async function sendVerificationEmail(email, firstName, link) {
 }
 
 // Track the sent email in RDS database
-async function trackEmailInRDS(email, link) {
+async function trackEmailInRDS(email, link, id, token) {
     const connection = await createConnection(rdsConfig);
-    const query = 'INSERT INTO email_tracking (email, verification_link) VALUES (?, ?)';
-    await connection.execute(query, [email, link]);
+    const query = 'INSERT INTO email_tracking (email, verification_link, user_id, token, created_at) VALUES (?, ?, ?, ?, ?)';
+    await connection.execute(query, [email, link, id, token, new Date().toISOString()]);
     await connection.end();
 }
