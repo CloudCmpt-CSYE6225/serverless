@@ -70,6 +70,6 @@ async function sendVerificationEmail(email, firstName, link) {
 async function trackEmailInRDS(email, link, id, token) {
     const connection = await createConnection(rdsConfig);
     const query = 'INSERT INTO email_tracking (email, verification_link, user_id, token, created_at) VALUES (?, ?, ?, ?, ?)';
-    await connection.execute(query, [email, link, id, token, new Date().toISOString()]);
+    await connection.execute(query, [email, link, id, String(token), new Date().toISOString()]);
     await connection.end();
 }
