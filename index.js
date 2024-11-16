@@ -43,7 +43,7 @@ export const handler = async (event) => {
 
 // Generate a unique verification link that expires after 2 minutes
 function generateVerificationLink(email, token) {
-    return `http://${process.env.environment}.srijithmakam.me/v1/user/verify?email=${email}&token=${token}`;
+    return `http://${process.env.environment}.srijithmakam.me/v1/user/verify?email=${email}&token=${String(token)}`;
 }
 
 // Send verification email using SendGrid
