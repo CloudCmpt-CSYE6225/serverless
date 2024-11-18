@@ -26,13 +26,13 @@ export const handler = async (event) => {
         const {  email, first_name: firstName, id, token } = userDetails;
 
         // Generate verification link (expires in 2 minutes)
-        const verificationLink = generateVerificationLink(email, token);
+        const verificationLink = generateVerificationLink(email, id);
 
         // Send verification email via SendGrid
         await sendVerificationEmail(email, firstName, verificationLink);
 
         // Track email in RDS database
-        await trackEmailInRDS(email, verificationLink, id, token);
+        await trackEmailInRDS(email, verificationLink, id, id);
 
         return { statusCode: 200, body: 'Email sent successfully' };
     } catch (error) {
@@ -43,7 +43,7 @@ export const handler = async (event) => {
 
 // Generate a unique verification link that expires after 2 minutes
 function generateVerificationLink(email, token) {
-    return `http://${process.env.environment}.srijithmakam.me/v1/user/verify?email=${email}&token=${String(token)}`;
+    return `http://${process.env.environment}.srijithmakam.me/v1/user/verify?email=${email}&token=${token}`;
 }
 
 // Send verification email using SendGrid
@@ -70,6 +70,6 @@ async function sendVerificationEmail(email, firstName, link) {
 async function trackEmailInRDS(email, link, id, token) {
     const connection = await createConnection(rdsConfig);
     const query = 'INSERT INTO email_tracking (email, verification_link, user_id, token, created_at) VALUES (?, ?, ?, ?, ?)';
-    await connection.execute(query, [email, link, id, String(token), new Date().toISOString()]);
+    await connection.execute(query, [email, link, id, token, new Date().toISOString()]);
     await connection.end();
 }
